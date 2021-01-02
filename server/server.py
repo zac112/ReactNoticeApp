@@ -52,9 +52,8 @@ class MyServer(BaseHTTPRequestHandler):
 
     def parse(self, path):
         path = path.strip("/")
-        if not path.startswith("api/"):
-            return None
-        path = path[4:]
+        if path.startswith("api/"):
+            path = path[4:]
         return path
         
     def do_GET(self):
