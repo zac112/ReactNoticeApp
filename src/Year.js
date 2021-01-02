@@ -12,7 +12,7 @@ class Year extends React.Component {
 		
 		console.log(this.props.dates);
 		var months = {};
-		for (var i=0; i<this.props.dates.length; i++){
+		for (let i=0; i<this.props.dates.length; i++){
 			var dates = this.props.dates[i].split("-");
 			var d = months[dates[0]]
 			if (d === undefined){
@@ -23,7 +23,7 @@ class Year extends React.Component {
 		}
 		
 		console.log(months);
-		for (var i=1; i<13; i++){
+		for (let i=1; i<13; i++){
 			var x = months[i];
 			if (x === undefined){
 				continue;

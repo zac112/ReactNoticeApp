@@ -1,5 +1,6 @@
 import React from 'react';
 import Notice from './Notice.js';
+import Config from './Config.js';
 
 class Day extends React.Component {
 	constructor(props) {
@@ -20,7 +21,8 @@ class Day extends React.Component {
 	}
 
 	fetchData(){
-		fetch("http://localhost:8080/"+this.props.year+"/"+this.props.month+"/"+this.props.day+"/")
+		var c = new Config();
+		fetch(c.serverApi+this.props.year+"/"+this.props.month+"/"+this.props.day+"/")
 		.then(res => res.json())
 		.then(
 			(result) => {

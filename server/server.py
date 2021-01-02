@@ -4,8 +4,15 @@ import time
 import json
 import pymongo
 
-hostName = "localhost"
-serverPort = 8080
+try:
+    with open("conf.json") as f:
+        conf = json.load(f)
+except Exception as e:
+    print(e)
+    exit()
+    
+hostName = conf["host"]
+serverPort = conf["port"]
 
 mongoclient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongo = mongoclient["Notices"]
@@ -20,22 +27,9 @@ class MyServer(BaseHTTPRequestHandler):
         self.end_headers()
 
         self.wfile.write(bytes(json.dumps(mongo.list_collection_names()), 'utf-8'))
-        
-    def do_GET(self):
-        path = self.path.strip("/")
 
-        if path == "days":
-            self.getDays()
-            return
-        
-        try:
-            year,month,day = path.split("/")
-        except:
-            self.send_response(400)
-            self.end_headers()
-            self.wfile.write(bytes("Malformed url", 'utf-8'))
-            return
-
+    def getDay(self, path):
+        year,month,day = path.split("/")
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -49,14 +43,46 @@ class MyServer(BaseHTTPRequestHandler):
             
         print(res)
         self.wfile.write(bytes(json.dumps(res), 'utf-8'))
+        
+    def sendError(self,error,msg):
+        self.send_response(error)
+        self.end_headers()
+        self.wfile.write(bytes(msg, 'utf-8'))
+        return
+
+    def parse(self, path):
+        path = path.strip("/")
+        if not path.startswith("api/"):
+            return None
+        path = path[4:]
+        return path
+        
+    def do_GET(self):
+        path = self.parse(self.path)
+        if path == None:
+            self.sendError(400,"Malformed url")
+            return
+                
+        if path == "days":
+            self.getDays()
+            return
+        
+        try:
+            self.getDay(path)   
+        except:
+            self.sendError(400,"Malformed url")
+            return        
 
     def do_POST(self):
+        path = self.parse(self.path)
+        if path == None:
+            self.sendError(400,"Malformed url")
+            return
+        
         try:
-            year,month,day = self.path.strip("/").split("/")
+            year,month,day = path.strip("/").split("/")
         except:
-            self.send_response(400)
-            self.end_headers()
-            self.wfile.write(bytes("Malformed url", 'utf-8'))
+            self.sendError(400,"Malformed url")
             return
         
         try:
@@ -64,6 +90,7 @@ class MyServer(BaseHTTPRequestHandler):
             print("pload",payload)
             payload = json.loads(payload)
         except Exception as e:
+            self.sendError(400,"No payload")
             print("Error:",e)
             return
 
@@ -71,10 +98,7 @@ class MyServer(BaseHTTPRequestHandler):
         keys = ["title", "data"]
         for k in keys:
             if k not in payload:
-                print("Malformed json: no",k)
-                self.send_response(400)
-                self.end_headers()
-                self.wfile.write(bytes("Malformed json: no "+str(k), 'utf-8'))
+                self.sendError(400,"Malformed json: no "+str(k))
                 return
 
         self.send_response(200)

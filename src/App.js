@@ -1,15 +1,17 @@
 import './App.css';
 import Year from './Year.js';
 import React from 'react';
+import Config from "./Config.js";
 
 class App extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {'items':[]}
+		this.config = new Config();
 	}
 	
 	componentDidMount(){
-		fetch("http://localhost:8080/days/")
+		fetch(this.config.dayListAddress)
 		.then(res => res.json())
 		.then(
 			(result) => {
@@ -17,7 +19,7 @@ class App extends React.Component {
 				
 				console.log(result);				
 				for (var i=0; i<result.length; i++){
-						var s = result[i].split("\.");
+						var s = result[i].split(".");
 						var d = dates[s[0]];
 						if (d === undefined){
 							d = [];
